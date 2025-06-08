@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info
+*.egg
+*.so
+.Python
+build/
+dist/
+.eggs/
+*.whl
+*.pyproj
+*.spec
+.ipynb_checkpoints
+.python-version
+
+# Virtual Environment
+.venv/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Local development
+tmp/
+temp/
+.ruff_cache
