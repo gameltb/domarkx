@@ -395,7 +395,7 @@ class MarkdownLLMParser:
         return self.document
 
     def get_message_and_code_block(
-        self, messageIndex: int, codeBlockInMessageIndex: int
+        self, messageIndex: int, codeBlockInMessageIndex: Optional[int] = None
     ) -> Tuple[Optional[Message], Optional[CodeBlock]]:
         """
         Retrieves a specific message and a specific code block within that message's content.
@@ -413,6 +413,9 @@ class MarkdownLLMParser:
         if not (0 <= messageIndex < len(self.document.conversation)):
             return None, None
         message_obj = self.document.conversation[messageIndex]
+
+        if codeBlockInMessageIndex is None:
+            return message_obj, None
 
         actual_message_content = message_obj.content
 
