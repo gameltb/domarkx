@@ -33,6 +33,8 @@ def do_roo_code_action(
     for tool_call in tool_calls:
         console.print(tool_call)
         console.rule("tool_calls_exec")
+        if tool_call.get("tool_name") in ["think", "thinking"]:
+            continue
         tool_name, result = execute_tool_call(tool_call)
         assistant_response = format_assistant_response(tool_name, result)
         console.print(assistant_response)

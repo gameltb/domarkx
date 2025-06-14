@@ -35,8 +35,6 @@ def write_to_file_tool(path: str, content: str, line_count: int) -> str:
         raise TypeError(f"参数 'path' 必须是字符串类型，但接收到 {type(path).__name__}。")
     if not isinstance(content, str):
         raise TypeError(f"参数 'content' 必须是字符串类型，但接收到 {type(content).__name__}。")
-    if not isinstance(line_count, int):
-        raise TypeError(f"参数 'line_count' 必须是整数类型，但接收到 {type(line_count).__name__}。")
 
     actual_line_count = content.count("\n") + (
         1 if content.strip() else 0
@@ -46,13 +44,6 @@ def write_to_file_tool(path: str, content: str, line_count: int) -> str:
     elif not content:  # Empty content is 0 lines
         actual_line_count = 0
 
-    if actual_line_count != line_count:
-        error_msg = (
-            f"提供的 'line_count' ({line_count}) 与实际内容行数 ({actual_line_count}) 不符。"
-            f"请确保 'line_count' 精确反映 'content' 中的行数，包括尾随的换行符。"
-        )
-        logging.error(error_msg)
-        raise ValueError(error_msg)
 
     rpath = resolve_virtual_path(path)
     logging.info(f"解析后的文件路径: '{rpath}'。")

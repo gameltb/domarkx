@@ -1,9 +1,11 @@
 import io
 import logging
+import re  # 新增导入
 
 from rich.console import Console
 
 from ...utils.no_border_rich_tracebacks import NoBorderTraceback
+from ...utils.agent_fs_map import get_virtual_path
 
 REGISTERED_TOOLS = {}
 
@@ -101,27 +103,43 @@ def execute_tool_call(tool_call: dict, return_traceback=False):
         )
 
 
+def _replace_paths_in_string(text: str) -> str:
+    """
+    在给定文本中查找并替换所有已映射的实际路径为虚拟路径。
+    这会尝试匹配常见的Unix和Windows路径模式。
+    """
+    # 匹配可能的路径模式：
+    # (?:[a-zA-Z]:[\\/]|[/])? - 可选的Windows盘符或Unix根目录
+    # (?:[\\.]{1,2}[\\/])? - 可选的相对路径前缀 (./ or ../)
+    # (?:[a-zA-Z0-9_\-. ]+[\\/]) - 一个或多个目录段，以斜杠结尾
+    # [a-zA-Z0-9_\-. ]+ - 最终的文件名或目录名
+    # 这个正则表达式旨在匹配常见的绝对路径、相对路径和裸路径片段
+    path_regex = re.compile(
+        r"(?:"  # Non-capturing group for path start
+        r"(?:[a-zA-Z]:[\\/])|"  # Windows absolute path (e.g., C:\)
+        r"(?:[\\.]{1,2}[\\/])|"  # Relative path (e.g., ./ or ../)
+        r"[\\/]"  # Unix absolute path (e.g., /)
+        r")?"  # Optional path start for bare paths (e.g., "my_file.txt" if mapped as a root)
+        r"(?:[a-zA-Z0-9_\-. ]+[\\/])*"  # Zero or more directory segments (e.g., "dir1/dir2/")
+        r"[a-zA-Z0-9_\-. ]+"  # Final file/directory name (e.g., "file.txt")
+    )
+
+    def _replacer(match):
+        real_path = match.group(0)
+        virtual_path = get_virtual_path(real_path)
+        if virtual_path:
+            # logging.debug(f"将实际路径 '{real_path}' 转换为虚拟路径 '{virtual_path}'")
+            return virtual_path
+        return real_path
+
+    return path_regex.sub(_replacer, text)
+
+
 def format_assistant_response(tool_name: str, tool_result: str) -> str:
     """
     将工具执行结果格式化为助手的完整回复。
-
-    参数:
-        tool_name (str): 执行的工具的名称。
-        tool_result (str): 工具执行返回的原始结果字符串。
-
-    返回:
-        str: 格式化后的助手回复字符串（XML 格式）。
+    在返回结果之前，将 tool_result 中存在于 fs_map 中的实际路径转换为虚拟路径。
     """
-    # 确保XML内容中的特殊字符被转义，以避免解析问题
-    # 这里为了简洁，仅对一些常见字符进行简单替换，实际生产级可能需要更全面的XML转义库
-    # 但由于通常工具结果是纯文本，这种简单处理通常足够
-    # tool_result_escaped = (
-    #     tool_result.replace("&", "&amp;")
-    #     .replace("<", "&lt;")
-    #     .replace(">", "&gt;")
-    #     .replace('"', "&quot;")
-    #     .replace("'", "&apos;")
-    # )
+    processed_tool_result = _replace_paths_in_string(tool_result)
 
-    # 鉴于工具返回的通常是多行文本，直接插入即可，外部系统会处理
-    return f'<tool_output tool_name="{tool_name}">\n{tool_result}\n</tool_output>'
+    return f'<tool_output tool_name="{tool_name}">\n{processed_tool_result}\n</tool_output>'

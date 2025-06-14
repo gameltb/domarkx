@@ -82,11 +82,6 @@ def parse_tool_calls(message: str) -> list:
             )
 
             if not param_open_tag_match:
-                # 如果没有找到更多的参数标签，检查是否有非空白字符的剩余内容。
-                # 这表示有不可修复的语法错误。
-                remaining_text = tool_block_content[temp_idx:].strip()
-                if remaining_text:
-                    raise ToolCallParsingError(f"工具 '{tool_name}' 块中存在格式错误的非标签内容: '{remaining_text}'")
                 break  # 没有更多标签，或只剩下空白字符，退出循环
 
             # 在当前参数标签之前，检查是否有非空白字符的内容。

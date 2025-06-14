@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+import shlex
 
 from domarkx.utils.agent_fs_map import resolve_virtual_path
 
@@ -50,9 +51,11 @@ def execute_command_tool(command: str, cwd: str = None) -> str:
     logging.info(f"命令的实际工作目录将是: '{resolved_cwd}'。")
 
     try:
+        # 使用 shlex.split() 正确分割带引号的命令
+        command_parts = shlex.split(command)
         process = subprocess.run(
-            command,
-            shell=True,
+            command_parts,  # 使用命令列表而非字符串
+            shell=False,    # 设置为 False 防止 shell 解释特殊字符
             capture_output=True,
             text=True,
             cwd=resolved_cwd,
